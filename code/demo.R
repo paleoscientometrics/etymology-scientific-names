@@ -29,13 +29,18 @@ range_write(ss=ss,
 
 
 ## Import .txt file of dinosaur trace taxa names:
-trace_terms <- scan("./data/Dino_trace_terms.txt", what = "character"); trace_terms <- trace_terms[trace_terms != ""]
+trace_terms <- readLines("./data/Dino_trace_terms.txt")
+trace_terms <- trace_terms[trace_terms != ""]
 exclude_terms <- c(trace_terms,
                    "Fenestrosaurus","Ovoraptor","Ornithoides" #names from popular article by Osborne (1925) that should not be in the database
 )
 exclude_terms <- exclude_terms[exclude_terms != ""] #remove any blank entries that may have crept in
 
+category <- rep(NA, length(exclude_terms))
+n <- grep(" ", exclude_terms)
+category[n] <- "sp"
+category[-n] <- "genus"
 
-
-
+tax_sheet$`category (dinosaur or ichofossil)`[tax_sheet$accepted_name %in% exclude_terms[n]] <- "trace"
+tax_sheet$`category (dinosaur or ichofossil)`[tax_sheet$genus %in% exclude_terms[-n]] <- "trace"
 
