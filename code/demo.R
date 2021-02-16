@@ -19,3 +19,9 @@ range_write(ss=ss,
 			data=tax_sheet[,"category (dinosaur or ichofossils)"], 
 			range="O2", # column in which this data is, start with 2 because we don't want to edit the col names
 			col_names=FALSE)
+
+# to overwrite the whole thing
+range_write(ss=ss, 
+			data=tax_sheet, 
+			range="A1", # column in which this data is, start with 2 because we don't want to edit the col names
+			col_names=TRUE)
