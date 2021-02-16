@@ -25,3 +25,17 @@ range_write(ss=ss,
 			data=tax_sheet, 
 			range="A1", # column in which this data is, start with 2 because we don't want to edit the col names
 			col_names=TRUE)
+
+
+
+## Import .txt file of dinosaur trace taxa names:
+trace_terms <- scan("./data/Dino_trace_terms.txt", what = "character"); trace_terms <- trace_terms[trace_terms != ""]
+exclude_terms <- c(trace_terms,
+                   "Fenestrosaurus","Ovoraptor","Ornithoides" #names from popular article by Osborne (1925) that should not be in the database
+)
+exclude_terms <- exclude_terms[exclude_terms != ""] #remove any blank entries that may have crept in
+
+
+
+
+
