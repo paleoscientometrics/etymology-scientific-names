@@ -16,7 +16,7 @@ tax_sheet <- range_read(ss, sheet=1)
 tax_sheet$`category (dinosaur or ichofossils)`[grep("pes$|pus$", tax_sheet$genus)] <- "maybe ichnofossil" 
 
 range_write(ss=ss, 
-			data=tax_sheet[,"category (dinosaur or ichofossils)"], 
+			data=data.frame(tax_sheet$`category (dinosaur or ichofossil)`),
 			range="O2", # column in which this data is, start with 2 because we don't want to edit the col names
 			col_names=FALSE)
 
@@ -43,4 +43,5 @@ category[-n] <- "genus"
 
 tax_sheet$`category (dinosaur or ichofossil)`[tax_sheet$accepted_name %in% exclude_terms[n]] <- "trace"
 tax_sheet$`category (dinosaur or ichofossil)`[tax_sheet$genus %in% exclude_terms[-n]] <- "trace"
+
 
