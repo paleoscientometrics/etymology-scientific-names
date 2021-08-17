@@ -1,3 +1,24 @@
+## ---------------------------
+##
+## Project: Etymology of Dinosaur Names
+##
+## Purpose of script: 
+## Summarises the different etymologies of dinosaur names overall and over time
+##
+## Author: Nussaïbah B. Raja
+## Copyright (c) N. Raja, 2021
+## Email: nussaibah.raja.schoob@fau.de
+##
+## Date Created: 2021-08-16
+## Last Modified: 2021-08-17
+##
+## ---------------------------
+##
+## Notes:
+##   
+##
+## ---------------------------
+
 # Load packages -----------------------------------------------------------
 library(tidyverse)
 library(ggthemes)
