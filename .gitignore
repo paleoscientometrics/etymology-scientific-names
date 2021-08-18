@@ -3,4 +3,8 @@
 .RData
 .Ruserdata
 .secrets
-etymology-scientific-names.Rproj
+*.Rproj
+.Rprofile
+/code/data
+archive/
+*.png
