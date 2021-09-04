@@ -96,8 +96,10 @@ for(i in 1:length(affs)){
 
 df.person$first <- first2
 df.person$all <- alla
+df.person$first_code <- lapply(first, function(x) x[1]) #get only first aff
 
 df.person <- na.omit(df.person)
+
 df.person <- df.person %>% 
 	mutate(local=ifelse(person_code==type_code, "yes", "no"))
 
@@ -192,11 +194,80 @@ t1 + t2 +
 	plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
 dev.off()
 
+
+# Reason ------------------------------------------------------------------
 pdata <- read.csv("data/person_data.csv")
+
 df.person <- df.person %>% 
 	left_join(pdata, by="taxon_name")
 
-prop.table(table(df.person$reason))
+pdata <- left_join(df.person, pdata)
+
+df.reason <- pdata %>% 
+	mutate(gender = case_when(gender=="male" ~ "man",
+							  gender=="female" ~ "woman")) %>% 
+	group_by(gender, reason) %>% 
+	tally() %>% 
+	filter(!is.na(reason))
+
+df.gender <- df.reason %>% 
+	pivot_wider(id_cols=reason, names_from=gender, values_from=n) %>% 
+	mutate(diff = abs(man-woman))
+
+ggplot() +
+	geom_segment(data=df.gender, aes(x=man-1.5, xend=woman, y=reorder(reason, man), 
+									 yend=reorder(reason, man),
+									 col=diff), 
+				 size=1.5) +
+	geom_point(data=data.frame(x=c(0,0), y=c(-1,-1),
+							   shape=c("man", "woman")), aes(x=x, y=y, shape=shape), 
+			   col="black", size=3, stroke=2) +
+	coord_cartesian(ylim=c(0,10)) +
+	scale_color_gradient(low=pal[3], high=pal[5]) +
+	scale_shape_manual(values=c(man=21, woman=16)) +
+	labs(x="number of species described", y="reason", 
+		 col="difference between
+genders",
+		 shape="gender") +
+	annotate("point", x=df.reason[df.reason$gender=="woman",]$n,
+			 y=df.reason[df.reason$gender=="woman",]$reason,
+			 col=pal[3], size=3, stroke=2) +
+	annotate("point", x=df.reason[df.reason$gender=="man",]$n,
+			 y=df.reason[df.reason$gender=="man",]$reason,
+			 col=pal[5], size=3, stroke=2, shape=21) +
+	theme(legend.position = "right")
+
+ggsave("plots/Fig_04_gender_reason.svg", w=8, h=4)
+
+df.reason2 <- pdata %>%  filter(!is.na(reason)) %>% 
+	group_by(local, reason) %>% 
+	tally()
+
+df.local <- df.reason2 %>% 
+	pivot_wider(id_cols=reason, names_from=local, values_from=n) %>% 
+	mutate(diff = abs(yes-no))
+
+ggplot() +
+	geom_segment(data=df.local, aes(x=yes-1.5, xend=(no+1.5), y=reorder(reason, yes), 
+									 yend=reorder(reason, yes),
+									 col=diff), 
+				 size=1.5)  +
+	geom_point(data=data.frame(x=c(0,0), y=c(-1,-1),
+							   shape=c("yes", "yes")), aes(x=x, y=y, shape=shape), 
+			   col="black", size=3, stroke=2) +
+	coord_cartesian(ylim=c(0,10)) +
+	scale_color_gradient(low=pal[3], high=pal[5]) +
+	scale_shape_manual(values=c(no=21, yes=16)) +
+	labs(x="number of species described", y="reason", 
+		 col="difference",
+		 shape="local") +
+	annotate("point", x=df.reason2[df.reason2$local=="yes",]$n,
+			 y=df.reason2[df.reason2$local=="yes",]$reason,
+			 col=pal[3], size=3, stroke=2) +
+	annotate("point", x=df.reason2[df.reason2$local=="no",]$n,
+			 y=df.reason2[df.reason2$local=="no",]$reason,
+			 col=pal[5], size=3, stroke=2, shape=21) +
+	theme(legend.position = "right")
 
 # Where are dinosaurs found -----------------------------------------------
 # and who are dinosaurs named after
@@ -220,7 +291,7 @@ worldtilegrid$lab[is.na(worldtilegrid$n)] <- ""
 #worldtilegrid$person[!is.na(worldtilegrid$n) & is.na(worldtilegrid$person)] <- 0
 
 mid <- 0.10
-ggplot(worldtilegrid, aes(xmin = x, ymin = y, xmax = x + 1, ymax = y + 1))  +
+p1 <- ggplot(worldtilegrid, aes(xmin = x, ymin = y, xmax = x + 1, ymax = y + 1))  +
 	geom_rect(color = "#ffffff", aes(fill=person*100)) + 
 	geom_text(aes(x = x, y = y, label = lab,
 				  fontface=ifelse(person < n, 3,2),
@@ -240,4 +311,34 @@ ggplot(worldtilegrid, aes(xmin = x, ymin = y, xmax = x + 1, ymax = y + 1))  +
 	coord_equal()
 
 ggsave("plots/Fig_02_map_person.svg", w=8,h=7)
+
+top10 <- dat %>% group_by(type_country) %>% 
+	tally() %>% 
+	na.omit() %>% 
+	slice_max(order_by = n, n=10)
+
+top10 <- dat[dat$type_country %in% top10$type_country,]
+
+
+p2 <- top10 %>% group_by(type_country, sp_named_after) %>% 
+	tally() %>% 
+	na.omit() %>% group_by(type_country) %>% 
+	mutate(prop=n/sum(n), 
+		   sp_named_after=factor(sp_named_after, levels=
+		   					  	c("other", "unknown", names(sort(table(dat$sp_named_after)))[-c(1,8)]))
+		   ) %>% 
+	ggplot(aes(x=type_country, y=prop, fill=sp_named_after)) +
+	geom_bar(stat="identity") +
+	scale_fill_manual(values=rev(c("#582f0e", "#7f4f24", "#936639", "#a68a64",
+							   "#b6ad90", "#a4ac86", "#656d4a", "#414833",
+							   "#333d29", "darkgrey", "lightgrey"))) +
+	guides(fill=guide_legend(nrow=4)) +
+	labs(x="", y="proportion", fill="category") +
+	theme(legend.position = "bottom")
+
+svg("plots/Fig_02_map_top10_combined.svg", w=8, h=10)
+p2 +p1 +
+	plot_layout(ncol=1, heights=c(0.3, 1)) +
+	plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
+dev.off()
 
