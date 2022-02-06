@@ -35,14 +35,16 @@ dino5 <- dat %>%  group_by(code) %>%
 
 ggplot(dino5, aes(x=x, y=y)) +
   geom_point(aes(size=n), alpha=0.5) +
-  scale_size(range=c(1,50)) +
+  scale_size(range=c(1,50),
+  		   limits=c(1,600)) +
   
   geom_text(aes(label=paste(country, "\n", n)),
             nudge_x = -0.01, hjust=1, vjust=-1) +
   scale_y_continuous(breaks=1:5,
-                     limits=c(1,7))+
+                     limits=c(0,7))+
   xlim(0.98, 1.01) +
   theme(legend.position = "none")
+
 
 ggsave("figs/top5/dino.svg", w=5, h=5)
 
@@ -74,12 +76,13 @@ count5 <- u_count2 %>% slice_max(order_by = n, n=5) %>%
 
 ggplot(count5, aes(x=x, y=y)) +
   geom_point(aes(size=n), alpha=0.5) +
-  scale_size(range=c(1,50)) +
+	scale_size(range=c(1,50),
+			   limits=c(1,600)) +
   
   geom_text(aes(label=paste(country, "\n", n)),
             nudge_x = -0.01, hjust=1, vjust=-1) +
   scale_y_continuous(breaks=1:5,
-                     limits=c(1,7))+
+                     limits=c(0,7))+
   xlim(0.98, 1.01) +
   theme(legend.position = "none")
 
@@ -99,12 +102,12 @@ fcount5 <- f_count2 %>% slice_max(order_by = n, n=5) %>%
 
 ggplot(fcount5, aes(x=x, y=y)) +
   geom_point(aes(size=n), alpha=0.5) +
-  scale_size(range=c(1,50)) +
+  scale_size(range=c(1,50), 			   limits=c(1,600)) +
   
   geom_text(aes(label=paste(country, "\n", n)),
             nudge_x = -0.01, hjust=1, vjust=-1) +
   scale_y_continuous(breaks=1:5,
-                     limits=c(1,7))+
+                     limits=c(0,7))+
   xlim(0.98, 1.01) +
   theme(legend.position = "none")
 
@@ -133,12 +136,12 @@ person5 <- df.person %>% group_by(person_code) %>%
 
 ggplot(person5, aes(x=x, y=y)) +
   geom_point(aes(size=n), alpha=0.5) +
-  scale_size(range=c(1,50)) +
+  scale_size(range=c(1,50), 			   limits=c(1,600)) +
   
   geom_text(aes(label=paste(country, "\n", n)),
             nudge_x = -0.01, hjust=1, vjust=-1) +
   scale_y_continuous(breaks=1:5,
-                     limits=c(1,7))+
+                     limits=c(0,7))+
   xlim(0.98, 1.01) +
   theme(legend.position = "none")
 
@@ -160,47 +163,13 @@ fperson5 <- df.person %>%
 
 ggplot(fperson5, aes(x=x, y=y)) +
   geom_point(aes(size=n), alpha=0.5) +
-  scale_size(range=c(1,50)) +
+  scale_size(range=c(1,50), 			   limits=c(1,600)) +
   
   geom_text(aes(label=paste(country, "\n", n)),
             nudge_x = -0.01, hjust=1, vjust=-1) +
   scale_y_continuous(breaks=1:5,
-                     limits=c(1,7))+
+                     limits=c(0,7))+
   xlim(0.98, 1.01) +
   theme(legend.position = "none")
 
 ggsave("figs/top5/foreign_eponym.svg", w=5, h=5)
-
-# first author 
-n <- grep("\\(", df.person$author_aff) # contains bracket, multiple affiliations
-
-first <- list()
-first2 <- rep(NA, length(affs)) # firstauthor local
-alla <- rep(NA, length(affs)) # all authors local
-
-for(i in 1:length(affs)){
-  if(i %in% n){
-    temp <- do.call(rbind, strsplit(affs[[i]], "\\("))
-    
-    ff <- temp[1,2]
-    loc <- which(temp[,2]==ff)
-    
-    first[[i]] <- unique(countrycode(counts[[i]][loc],
-                                     "country.name", "iso3c"))
-  } else {
-    first[[i]] <- countrycode(counts[[i]][1], 
-                              "country.name", "iso3c")
-  }
-  
-  first2[i] <- ifelse(df.person$type_code[i] %in% first[[i]], "yes", "no")
-  alla[i] <- ifelse(df.person$type_code[i] %in% countrycode(counts[[i]], "country.name", "iso3c"), "yes", "no")
-}
-
-df.person$first <- first2
-df.person$all <- alla
-df.person$first_code <- lapply(first, function(x) x[1]) #get only first aff
-
-df.person <- na.omit(df.person)
-
-df.person <- df.person %>% 
-  mutate(local=ifelse(person_code==type_code, "yes", "no"))
