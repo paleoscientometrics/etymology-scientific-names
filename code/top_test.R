@@ -26,8 +26,16 @@ dat <- read.csv(file.path("data", "dino_data.csv")) %>%
 # Dinosaurs ---------------------------------------------------------------
 dat$code <- countrycode(dat$type_country, "country.name", "iso3c")
 
+dat %>%  group_by(code) %>% 
+  tally() %>% 
+  na.omit() %>% 
+arrange(desc(n)) %>% 
+  mutate(rank=1:nrow(.)) %>% 
+  filter(code=="GBR")
+
 dino5 <- dat %>%  group_by(code) %>% 
   tally() %>% 
+  na.omit() %>% 
   slice_max(order_by=n, n=5) %>% 
   mutate(x=1,
          y=nrow(.):1,
@@ -68,6 +76,10 @@ unique(x)})
 
 u_count2 <- data.frame(table(unlist(u_count)))
 colnames(u_count2) <- c("code", "n")
+
+u_count2[order(u_count2$n, decreasing = T),] %>% 
+  mutate(rank=1:nrow(.)) %>% 
+  filter(code=="MNG")
 
 count5 <- u_count2 %>% slice_max(order_by = n, n=5) %>% 
   mutate(x=1,
