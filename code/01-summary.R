@@ -39,8 +39,10 @@ pal <- c("#f0ead2", "#dde5b6", "#adc178", "#a98467", "#6c584c")
 
 # Load data ---------------------------------------------------------------
 
-dat <- read.csv(file.path("data", "dino_data.csv")) %>% 
+dat <- read.csv(file.path("data", "dino_data_cleaned.csv")) %>% 
 	filter(data_enterer != "" & group != "trace")
+
+dat$ref_pubyr[dat$taxon_name=="Apatosaurus excelsus"] <- 1879
 
 summ_sp <- dat %>% group_by(sp_named_after) %>% 
 	tally() %>% 
