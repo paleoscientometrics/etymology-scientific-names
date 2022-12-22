@@ -59,6 +59,37 @@ df.person$person_code <-    countrycode(df.person$sp_if_person_country, "country
 
 # TODO: check the empty ones and those that cannot be assigned a country
 
+df.person <- df.person %>% mutate(local = ifelse(type_code == person_code, "yes", "no"))
+tot <- nrow(df.person)
+
+prop.table(table(df.person$local))
+
+top_local <- df.person %>% group_by(type_code, local) %>% 
+  tally() %>% 
+  group_by(type_code) %>% 
+  mutate( tot = sum(n), 
+          prop = round(n/sum(n), 3) * 100) %>% 
+  filter(local=="yes" & tot > 5) %>% 
+  arrange(desc(prop))
+
+top_local <- top_local %>% mutate(country = countrycode(type_code, "iso3c", "country.name"),
+                     region = countrycode(type_code, "iso3c", "region23")) %>% 
+  ungroup() %>% 
+  select("Source country" = country, "Source region"=region, 
+         "Number of local eponyms"=n, "Total eponyms"=tot, "%" = prop)
+  
+write.csv(top_local, "output/top_local.csv", row.names = F)
+
+df.person %>% filter(type_code == "MNG") %>% group_by(person_code) %>% 
+  tally()
+
+df.person %>% filter(type_country)
+
+# Reasons -----------------------------------------------------------------
+
+
+
+
 reasons <- df.person %>% 
   mutate(ending = case_when(grepl("i$", taxon_name) ~ "-i",
                             grepl("ae$", taxon_name) ~ "-ae",
