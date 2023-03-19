@@ -101,14 +101,36 @@ species %<>%
                 .names = "{gsub('country', 'cc', .col)}"), 
          .after = type_country2)
 
+# add type_country
+
+genus <- genus %>% left_join(
+  species %>% distinct(ref_pubyr, genus, type_cc, type_cc2) 
+)
+
+genus %>% 
+  janitor::get_dupes(genus) 
+
+# dups
+# Brodavis - Canada
+# Martinavis - France
+
+genus <- genus %>% 
+  filter(!(genus == "Brodavis" & type_cc != "CAN")) %>% 
+  filter(!(genus == "Martinavis" & type_cc != "FRA"))
+
+genus %>% 
+  janitor::get_dupes(genus) # 0, good
+
+
 saveRDS(species, "data/species.rds")
 saveRDS(genus, "data/genus.rds")
 
 # Clean affiliations ------------------------------------------------------
 
-refs_un <- species %>% distinct(primary_reference, .keep_all = T) # removing duplicated references
+refs_un <- readxl::read_excel("data/final_data.xlsx", sheet=3)
 refs_un$aff_country <- gsub(",", ";", refs_un$aff_country)
 
+refs_un$aff_country[refs_un$aff_country == "Unknown"] <- NA
 any(grepl(",", refs_un$aff_country)) # FALSE
 
 # cleaning affs
@@ -154,7 +176,37 @@ for(i in 1:nrow(countries_hist)){
 
 saveRDS(refs_un, "data/references.rds")
 
+# Eponyms -----------------------------------------------------------------
+eponyms <- readxl::read_excel("data/person_data.xlsx")
 
+epo_sp <- species %>% 
+  filter(sp_named_after == "person") %>% 
+  select(genus, species, person_country = sp_if_person_country) %>% 
+  mutate(taxon_name = paste(genus, species), .before =genus)
 
+epo_gen <- genus %>% 
+  filter(gen_named_after == "person") %>% 
+  select(genus, person_country = gen_if_person_country) %>% 
+  mutate(taxon_name = genus, .before =genus)
 
+epo_all <- bind_rows(epo_sp, epo_gen)
+  
+janitor::get_dupes(epo_all, taxon_name) #0
+janitor::get_dupes(eponyms, taxon_name) #0
 
+epo_all <- left_join(epo_all, eponyms, by = "taxon_name")
+epo_all$person_country[epo_all$person_country %in% c("German", 
+                                                     "Germany (born in what was then Prussia but is now part of Poland)")] <- "Germany"
+
+epo_all$person_country[epo_all$person_country %in% c("Mongol Empire")] <- "Mongolia"
+
+epo_all %<>% 
+  mutate(person_country = strsplit(person_country, ";"),
+         person_cc = lapply(person_country, countrycode, origin = "country.name", destination = "iso3c"))
+
+# not given a country:
+# * Roman Republic
+# * Gurkani (Timurid Empire)
+# * Unknown
+
+saveRDS(epo_all, "data/eponyms.rds")

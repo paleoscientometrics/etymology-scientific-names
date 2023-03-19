@@ -208,3 +208,5 @@ ggplot(tmp, aes(x = ref_pubyr, y=prop, col=tot2)) +
   scale_color_viridis_c(option="magma", end=0.9, begin=0.1, direction=-1)
 
 ggsave("figs/Fig_S_local_prop.png", width=8, h=6, units=c("in"))
+
+# DO proportions of high vs low income

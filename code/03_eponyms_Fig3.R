@@ -22,16 +22,14 @@
 
 # Load packages -----------------------------------------------------------
 library(tidyverse)
+library(magrittr)
 library(ggthemes)
-library(extrafont)
 library(patchwork)
 library(countrycode)
 library(grid)
 
 # Plot option -------------------------------------------------------------
-extrafont::loadfonts()
-
-theme_set(theme_hc(base_family = "Roboto") +
+theme_set(theme_hc() +
             theme(axis.title.y = element_text(angle=90, vjust=1),
                   axis.title = element_text(face="bold"),
                   legend.title = element_text(face="bold"),
@@ -42,10 +40,19 @@ pal <- c("#f0ead2", "#dde5b6", "#adc178", "#a98467", "#6c584c")
 
 # Load data ---------------------------------------------------------------
 
-dat <- read.csv(file.path("data", "dino_data.csv")) %>% 
-  filter(data_enterer != "" & group != "trace")
+dat_sp <- readRDS("data/species.rds")
+dat_gen <- readRDS("data/genus.rds")
 
 df.person <- read.csv(file.path("data", "person_data.csv")) 
+
+
+dat_sp %<>% filter(sp_named_after == "person") %>% 
+  select(genus, type_cc, type_cc2, person_name = sp_if_person_name, person_country = sp_if_person_country)
+
+dat_gen %<>% filter(gen_named_after == "person") %>% 
+  select(genus, type_cc, type_cc2, person_name = gen_if_person_name, person_country = gen_if_person_country,
+         notes = )
+
 
 df.person <- df.person %>% left_join(
   dat %>% select(taxon_name, type_country, sp_if_person_country) )
@@ -86,9 +93,6 @@ df.person %>% filter(type_code == "MNG") %>% group_by(person_code) %>%
 df.person %>% filter(type_country)
 
 # Reasons -----------------------------------------------------------------
-
-
-
 
 reasons <- df.person %>% 
   mutate(ending = case_when(grepl("i$", taxon_name) ~ "-i",
