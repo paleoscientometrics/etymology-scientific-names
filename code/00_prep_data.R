@@ -29,7 +29,7 @@ library(magrittr)
 
 species <- readxl::read_excel("data/final_data.xlsx", sheet = 1) %>% 
   filter(!is.na(data_enterer)) %>% 
-  select(genus = 2, genus_cleaned, species = 3, synonyms = 1, taxon_status, ref_pubyr, ref_language, primary_reference, group,
+  select(genus = 2, accepted_name, genus_cleaned, species = 3, synonyms = 1, taxon_status, ref_pubyr, ref_language, primary_reference, group,
          type_country, country_reposited, sp_named_after, sp_language = starts_with("sp_language"), 
          sp_if_person_name, sp_if_person_country, aff_country = starts_with("countries_of_authors"),
          reason_offence = "reason for potential offence")

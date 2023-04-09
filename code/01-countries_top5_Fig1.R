@@ -79,13 +79,14 @@ fperson5 <- eponyms %>%
   left_join(
     nm_events %>%  select(genus, species, type_cc)
   ) %>% 
-  filter(type_cc != person_cc & 
-           type_cc %in% cc) %>% 
+  filter(type_cc != person_cc) %>% 
   unnest(cols = person_cc) %>% 
   group_by(person_cc) %>% 
   tally() %>% 
   rename(code=person_cc, eponyms_foreign=n) %>% 
-  slice_max(order_by = eponyms_foreign, n= 7)
+  arrange(desc(eponyms_foreign)) %>% 
+  mutate(rank = 1:nrow(.)) %>% 
+  filter(code %in% cc)
 
 # Merge data
 df_country <- purrr::reduce(
