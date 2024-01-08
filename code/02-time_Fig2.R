@@ -52,7 +52,7 @@ levs <- c("factual", "hypothesis",
 names(levs) <- levs_old
 
 sp <- dat_sp %>% 
-  filter(taxon_status %in% c("recombined",
+  filter(!taxon_status %in% c("recombined",
                                                "corrected", 
                                                "corrected to")) %>% 
   select(genus, species, ref_pubyr, named_after=sp_named_after)
