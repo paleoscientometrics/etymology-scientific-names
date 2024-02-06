@@ -28,6 +28,7 @@ library(patchwork)
 library(countrycode)
 library(grid)
 
+
 # Plot option -------------------------------------------------------------
 extrafont::loadfonts()
 

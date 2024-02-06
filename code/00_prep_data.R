@@ -1,22 +1,23 @@
-## **********************************
+## *******************************************
 ##
 ## Project: Etymology of dinosaur names
 ##
 ## Purpose of script: To prepare data
 ##
-## Author: Nussaïbah B. Raja
-## Copyright (c) N. Raja, 2022
+## Authors: Nussaïbah B. Raja, Emma M. Dunne
+## Copyright (c) N. Raja & E. Dunne, 2024
 ## Email: nussaibah.raja.schoob@fau.de
+##        emma.dunne@fau.de
 ##
 ## Date Created: 2022-05-19
-## Last Modified:
+## Last Modified: 2024-02-09
 ##
-## **********************************
+## *******************************************
 ##
 ## Notes:
 ##   
 ##
-## **********************************
+## *******************************************
 
 
 # Load libraries and set up -----------------------------------------------
@@ -25,8 +26,10 @@ library(dplyr)
 library(countrycode)
 library(magrittr)
 
+
 # Load data ---------------------------------------------------------------
 
+## species names:
 species <- readxl::read_excel("data/final_data.xlsx", sheet = 1) %>% 
   filter(!is.na(data_enterer)) %>% 
   select(genus = 2, accepted_name, genus_cleaned, species = 3, synonyms = 1, taxon_status, ref_pubyr, ref_language, primary_reference, group,
@@ -36,28 +39,28 @@ species <- readxl::read_excel("data/final_data.xlsx", sheet = 1) %>%
 
 nrow(species) #1715
 
+## genus names only
 genus <- readxl::read_excel("data/final_data.xlsx", sheet = 2) %>% 
   select(genus = 1, genus_cleaned, ref_pubyr, primary_reference, group, taxon_status, gen_named_after, 
          gen_language = starts_with("gen_language"), gen_if_person_name, gen_if_person_country,
          reason_offence = "reason for potential offence")
 
+## data on country history
 countries_hist <- read.csv("data/countries_history.csv")
 names(countries_hist)[7] <- "colonial"
 
-countries_hist %<>% 
+countries_hist %<>%  # modify some parts of this:
   mutate(year_end = as.numeric(ifelse(year_end == "present", "2023", year_end))) %>% 
   mutate(cc = countrycode(modern_border, "country.name", "iso3c"),
          cc2 = countrycode(territory_of, "country.name", "iso3c"))
 
-countries_hist %>% 
+countries_hist %>% # search for duplicates
   janitor::get_dupes(entry)
 
-# Germany - we can ignore
-# Mongolia, South, Africa and Tanzania, treat differenty
+names_sp <- names(species) # get column names from species data
 
-names_sp <- names(species)
 
-# add old borders
+## add old borders to some countries
 species %<>% 
   left_join(countries_hist %>% 
               filter(!entry %in% c("Germany", "Tanzania", "South Africa", "Mongolia")), c("type_country" = "entry")) %>% 
@@ -75,8 +78,7 @@ species %<>%
     type_country2, .after =type_country
   )
 
-# now deal with Mongolia, South Africa and Tanzania
-
+## deal with Mongolia, South Africa and Tanzania
 sp_countries <- countries_hist %>% 
   filter(entry %in% c("Tanzania", "South Africa", "Mongolia"))
 
@@ -89,31 +91,30 @@ for(i in 1:nrow(sp_countries)){
                                   tmp$territory_of, type_country2))
 }
 
-species %>% 
+## Changes USSR to Russia
+species %>% # how many?
   filter(type_country2 == "USSR") %>%  nrow() # 16
 
 species %<>% 
   mutate(type_country2 = ifelse(type_country2 == "USSR", "Russia", type_country2))
 
-# add country codes
+
+## add country codes
 species %<>% 
   mutate(across(c(type_country, type_country2), ~ countrycode(.x, "country.name", "iso3c"),
                 .names = "{gsub('country', 'cc', .col)}"), 
          .after = type_country2)
 
-# add type_country
-
+## add type_country
 genus <- genus %>% left_join(
   species %>% distinct(ref_pubyr, genus, type_cc, type_cc2) 
 )
 
+## identify duplicates
 genus %>% 
   janitor::get_dupes(genus) 
 
-# dups
-# Brodavis - Canada
-# Martinavis - France
-
+## filter these out
 genus <- genus %>% 
   filter(!(genus == "Brodavis" & type_cc != "CAN")) %>% 
   filter(!(genus == "Martinavis" & type_cc != "FRA"))
@@ -122,18 +123,23 @@ genus %>%
   janitor::get_dupes(genus) # 0, good
 
 
+## Save copies to folder:
 saveRDS(species, "data/species.rds")
 saveRDS(genus, "data/genus.rds")
 
+
+
+
 # Clean affiliations ------------------------------------------------------
 
+## Get affiliation data:
 refs_un <- readxl::read_excel("data/final_data.xlsx", sheet=3)
 refs_un$aff_country <- gsub(",", ";", refs_un$aff_country)
 
 refs_un$aff_country[refs_un$aff_country == "Unknown"] <- NA
 any(grepl(",", refs_un$aff_country)) # FALSE
 
-# cleaning affs
+## Clean up affiliations
 affs <- strsplit(refs_un$aff_country,";")
 counts <- strsplit(refs_un$aff_country, ";")
 
@@ -174,39 +180,49 @@ for(i in 1:nrow(countries_hist)){
   
 }
 
+## Save to folder:
 saveRDS(refs_un, "data/references.rds")
 
+
+
 # Eponyms -----------------------------------------------------------------
+
+## Load eponyms data
 eponyms <- readxl::read_excel("data/person_data.xlsx")
 
+## filter species data
 epo_sp <- species %>% 
   filter(sp_named_after == "person") %>% 
   select(genus, species, person_country = sp_if_person_country) %>% 
   mutate(taxon_name = paste(genus, species), .before =genus)
 
+## and genus data
 epo_gen <- genus %>% 
   filter(gen_named_after == "person") %>% 
   select(genus, person_country = gen_if_person_country) %>% 
   mutate(taxon_name = genus, .before =genus)
 
-epo_all <- bind_rows(epo_sp, epo_gen)
+epo_all <- bind_rows(epo_sp, epo_gen) # bind
   
 janitor::get_dupes(epo_all, taxon_name) #0
 janitor::get_dupes(eponyms, taxon_name) #0
 
+## join to main eponyms data object
 epo_all <- left_join(epo_all, eponyms, by = "taxon_name")
+
+## Clean up:
 epo_all$person_country[epo_all$person_country %in% c("German", 
                                                      "Germany (born in what was then Prussia but is now part of Poland)")] <- "Germany"
-
 epo_all$person_country[epo_all$person_country %in% c("Mongol Empire")] <- "Mongolia"
 
 epo_all %<>% 
   mutate(person_country = strsplit(person_country, ";"),
          person_cc = lapply(person_country, countrycode, origin = "country.name", destination = "iso3c"))
 
-# not given a country:
+# Note: not given a country: =
 # * Roman Republic
 # * Gurkani (Timurid Empire)
 # * Unknown
 
+## save to folder
 saveRDS(epo_all, "data/eponyms.rds")

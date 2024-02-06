@@ -11,17 +11,17 @@ dat <- readRDS("data/species.rds")
 dat_gen <- readRDS("data/genus.rds")
 eponyms <- readRDS("data/eponyms.rds")
 
-cc <- c("ARG", "CAN", "CHN", "DEU", "FRA", "GBR", "MNG", "RUS", "USA") # countries of interest
+## Our countries of interest
+cc <- c("ARG", "CAN", "CHN", "DEU", "FRA", "GBR", "MNG", "RUS", "USA") 
+
 
 # Dinosaurs ---------------------------------------------------------------
 
-# getting naming events
-
+## Get 'naming events'
 nm_events <- dat %>% select(genus, species, type_cc, primary_reference) %>% 
   bind_rows(
     dat_gen %>% select(genus, type_cc, primary_reference)
   )
-
 
 dino5 <- nm_events %>% 
   filter(type_cc %in% cc) %>% 
@@ -33,9 +33,10 @@ dino5 <- nm_events %>%
   
 # UK not in top 5
   
+
 # Researchers -------------------------------------------------------------
 
-# affiliations with only one country added
+## affiliations with only one country added
 refs_un <- readRDS("data/references.rds") %>% 
   distinct(primary_reference, .keep_all = TRUE) %>% 
   filter(primary_reference %in% c(dat$primary_reference, dat_gen$primary_reference))
