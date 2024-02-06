@@ -1,3 +1,25 @@
+## *******************************************
+##
+## Project: Etymology of dinosaur names
+##
+## Purpose of script: To create Figure 1
+##
+## Authors: Nussaïbah B. Raja, Emma M. Dunne
+## Copyright (c) N. Raja & E. Dunne, 2024
+## Email: nussaibah.raja.schoob@fau.de
+##        emma.dunne@fau.de
+##
+## Date Created: 2022-05-19
+## Last Modified: 2024-02-09
+##
+## *******************************************
+##
+## Notes:
+##   
+##
+## *******************************************
+
+
 library(tidyverse)
 library(ggthemes)
 library(patchwork)
@@ -15,7 +37,7 @@ eponyms <- readRDS("data/eponyms.rds")
 cc <- c("ARG", "CAN", "CHN", "DEU", "FRA", "GBR", "MNG", "RUS", "USA") 
 
 
-# Dinosaurs ---------------------------------------------------------------
+# 1. Dinosaurs ---------------------------------------------------------------
 
 ## Get 'naming events'
 nm_events <- dat %>% select(genus, species, type_cc, primary_reference) %>% 
@@ -23,47 +45,57 @@ nm_events <- dat %>% select(genus, species, type_cc, primary_reference) %>%
     dat_gen %>% select(genus, type_cc, primary_reference)
   )
 
-dino5 <- nm_events %>% 
+## top countries with most naming events:
+dino5 <- nm_events %>%
   filter(type_cc %in% cc) %>% 
   group_by(type_cc) %>% 
   tally() %>% 
   arrange(desc(n)) %>% 
   rename(described=n, code = type_cc) %>% 
   ungroup() 
-  
-# UK not in top 5
+
   
 
-# Researchers -------------------------------------------------------------
+# 2. Researchers -------------------------------------------------------------
 
-## affiliations with only one country added
+## Get reference info for each naming event:
 refs_un <- readRDS("data/references.rds") %>% 
   distinct(primary_reference, .keep_all = TRUE) %>% 
   filter(primary_reference %in% c(dat$primary_reference, dat_gen$primary_reference))
 
+## Count publications per country
 u_count2 <- data.frame(table(unlist(refs_un$aff_cc2)))
 colnames(u_count2) <- c("code", "n")
 
+## top countries with most publications naming dinosaurs:
 count5 <- u_count2 %>% 
   arrange(desc(n)) %>% 
   rename(publications=n) %>%
   filter(code %in% cc)  %>% # Mongolia not in top 5
   ungroup()
 
-# First author ------------------------------------------------------------
+
+
+# 3. First author ------------------------------------------------------------
+
+## Get info on first authors of primary references:
 f_count <- lapply(refs_un$aff_cc2, function(x) x[1])
 
 f_count2 <- data.frame(table(unlist(f_count)))
 colnames(f_count2) <- c("code", "n")
 
+## top countries with most first-author publications:
 fcount5 <- f_count2 %>% 
   filter(code %in% cc)  %>% 
   arrange(desc(n)) %>% 
   rename(first_author=n) %>% 
   ungroup()
 
+
+
 # Eponyms -----------------------------------------------------------------
 
+## top countries with most eponyms:
 person5 <- eponyms %>% 
   tidyr::unnest(cols = person_cc) %>% 
   group_by(person_cc) %>% 
@@ -74,8 +106,11 @@ person5 <- eponyms %>%
   ungroup()
 
 
+
 # Eponym-foreign ----------------------------------------------------------
 
+
+## top countries with most eponyms from foreign countries:
 fperson5 <- eponyms %>% 
   left_join(
     nm_events %>%  select(genus, species, type_cc)
@@ -93,10 +128,17 @@ fperson5 <- eponyms %>%
 df_country <- purrr::reduce(
   list(dino5, count5, fcount5, person5, fperson5), full_join, by="code") 
 
+
+
 # Sankey diagram ----------------------------------------------------------
+
+## Create Figure 1
+
+## collect all data from above:
 df <- df_country %>% 
   make_long(described, publications, first_author, all_eponyms, eponyms_foreign)
 
+## set up nodes and levels for Sankey diagram:
 df$value <- df$node
 levels(df$x)
 df$country <- rep(countrycode(df_country$code, "iso3c", "country.name"), each=5)
