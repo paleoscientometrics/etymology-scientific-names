@@ -3,15 +3,16 @@
 ## Project: Etymology of Dinosaur Names
 ##
 ## Purpose of script: 
-## Compares the country of the eponym to the type country and the affiliation(s) of
-## the "namer(s)".
+##  Compares the country of the eponym to 
+##    the type country and the affiliation(s)
+##      of the "namer(s)"
 ##
 ## Author: Nussaïbah B. Raja
 ## Copyright (c) N. Raja, 2021
 ## Email: nussaibah.raja.schoob@fau.de
 ##
 ## Date Created: 2021-08-16
-## Last Modified: 2021-08-17
+## Last Modified: 2024-02-06
 ##
 ## ---------------------------
 ##

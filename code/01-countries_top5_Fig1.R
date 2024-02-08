@@ -25,6 +25,7 @@ library(ggthemes)
 library(patchwork)
 library(countrycode)
 library(grid)
+library(svglite)
 library(ggsankey) # devtools::install_github("davidsjoberg/ggsankey")
 
 # Load data ---------------------------------------------------------------
@@ -173,10 +174,11 @@ ggplot(df, aes(x = x,
   theme_sankey(base_size = 14) +
   guides(fill=guide_legend(ncol=1)) +
   labs(x=NULL, fill="Order") +
-  theme(legend.position = "right",
+  theme(legend.position = "none",
         axis.text.x = element_text(size=10),
         legend.title = element_text(face="bold"))
 
 ggsave("figs/Fig_01_summary.svg", w=10, h=8)
+ggsave("figs/Fig_01_summary.pdf", w=10, h=8)
 ggsave("figs/Fig_01_summary_raw.png", w=10, h=8)
 
