@@ -48,7 +48,7 @@ nm_events <- dat %>% select(genus, species, type_cc, primary_reference) %>%
 
 ## top countries with most naming events:
 dino5 <- nm_events %>%
-  filter(type_cc %in% cc) %>% 
+  #filter(type_cc %in% cc) %>% 
   group_by(type_cc) %>% 
   tally() %>% 
   arrange(desc(n)) %>% 
@@ -170,7 +170,7 @@ ggplot(df, aes(x = x,
                             "Most publications\ndescribing dinosaurs",
                             "Most first authors\nin publications\ndescribing dinosaurs",
                             "Most dinosaur eponyms",
-                            "Most eponyms of dinosaurs\nfoundin another country"))+
+                            "Most eponyms of dinosaurs\nfound in another country"))+
   theme_sankey(base_size = 14) +
   guides(fill=guide_legend(ncol=1)) +
   labs(x=NULL, fill="Order") +
